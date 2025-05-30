@@ -1838,3 +1838,193 @@ def _initializeArchObject(
         return None
 
     return obj
+
+
+# MEP Extension Functions
+
+def makeWaterPipe(baseobj=None, diameter=0, length=0, systemtype="Cold Water Supply", material="Copper", placement=None, name=None):
+    """
+    Creates a water pipe object with MEP properties and hydraulic calculations.
+
+    Parameters
+    ----------
+    baseobj : Part::FeaturePython, optional
+        The base object for the pipe. Defaults to None.
+    diameter : float, optional
+        The diameter of the pipe in mm. Defaults to 0.
+    length : float, optional
+        The length of the pipe in mm. Defaults to 0.
+    systemtype : str, optional
+        Type of water system. Defaults to "Cold Water Supply".
+    material : str, optional
+        Pipe material. Defaults to "Copper".
+    placement : Placement, optional
+        The placement of the pipe. Defaults to None.
+    name : str, optional
+        The name to assign to the created pipe. Defaults to None.
+
+    Returns
+    -------
+    Part::FeaturePython
+        The created water pipe object.
+    """
+    waterpipe = _initializeArchObject(
+        "Part::FeaturePython",
+        baseClassName="_ArchWaterPipe",
+        internalName="WaterPipe",
+        defaultLabel=name if name else translate("Arch", "Water Pipe"),
+        moduleName="ArchMEP",
+        viewProviderName="_ViewProviderWaterPipe",
+    )
+
+    # Initialize all relevant properties
+    waterpipe.Diameter = diameter if diameter else params.get_param_arch("PipeDiameter")
+    waterpipe.Width = waterpipe.Diameter
+    waterpipe.Height = waterpipe.Diameter
+    waterpipe.SystemType = systemtype
+    waterpipe.PipeMaterial = material
+
+    if baseobj:
+        waterpipe.Base = baseobj
+    else:
+        waterpipe.Length = length if length else 1000
+
+    if placement:
+        waterpipe.Placement = placement
+
+    if FreeCAD.GuiUp:
+        if baseobj:
+            baseobj.ViewObject.hide()
+
+    return waterpipe
+
+
+def makeSanitaryFixture(baseobj=None, fixturetype="Sink", placement=None, name=None):
+    """
+    Creates a sanitary fixture object for bathroom and kitchen installations.
+
+    Parameters
+    ----------
+    baseobj : Part::FeaturePython, optional
+        The base object for the fixture. Defaults to None.
+    fixturetype : str, optional
+        Type of sanitary fixture. Defaults to "Sink".
+    placement : Placement, optional
+        The placement of the fixture. Defaults to None.
+    name : str, optional
+        The name to assign to the created fixture. Defaults to None.
+
+    Returns
+    -------
+    Part::FeaturePython
+        The created sanitary fixture object.
+    """
+    fixture = _initializeArchObject(
+        "Part::FeaturePython",
+        baseClassName="_ArchSanitaryFixture",
+        internalName="SanitaryFixture",
+        defaultLabel=name if name else translate("Arch", fixturetype),
+        moduleName="ArchMEP",
+        viewProviderName="_ViewProviderSanitaryFixture",
+    )
+
+    # Initialize fixture properties
+    fixture.FixtureType = fixturetype
+
+    if baseobj:
+        fixture.Base = baseobj
+        if FreeCAD.GuiUp:
+            baseobj.ViewObject.hide()
+
+    if placement:
+        fixture.Placement = placement
+
+    return fixture
+
+
+def makeValve(baseobj=None, valvetype="Faucet", diameter=15, placement=None, name=None):
+    """
+    Creates a valve object for MEP systems including faucets and control valves.
+
+    Parameters
+    ----------
+    baseobj : Part::FeaturePython, optional
+        The base object for the valve. Defaults to None.
+    valvetype : str, optional
+        Type of valve. Defaults to "Faucet".
+    diameter : float, optional
+        Nominal diameter in mm. Defaults to 15.
+    placement : Placement, optional
+        The placement of the valve. Defaults to None.
+    name : str, optional
+        The name to assign to the created valve. Defaults to None.
+
+    Returns
+    -------
+    Part::FeaturePython
+        The created valve object.
+    """
+    valve = _initializeArchObject(
+        "Part::FeaturePython",
+        baseClassName="_ArchValve",
+        internalName="Valve",
+        defaultLabel=name if name else translate("Arch", valvetype),
+        moduleName="ArchMEP",
+        viewProviderName="_ViewProviderValve",
+    )
+
+    # Initialize valve properties
+    valve.ValveType = valvetype
+    valve.NominalDiameter = diameter
+
+    if baseobj:
+        valve.Base = baseobj
+        if FreeCAD.GuiUp:
+            baseobj.ViewObject.hide()
+
+    if placement:
+        valve.Placement = placement
+
+    return valve
+
+
+def makeMEPNetwork(pipes=None, fixtures=None, valves=None, name=None):
+    """
+    Creates an MEP network object that manages connected pipes, fixtures and valves.
+
+    Parameters
+    ----------
+    pipes : list of Part::FeaturePython, optional
+        List of water pipes in the network. Defaults to None.
+    fixtures : list of Part::FeaturePython, optional
+        List of sanitary fixtures in the network. Defaults to None.
+    valves : list of Part::FeaturePython, optional
+        List of valves in the network. Defaults to None.
+    name : str, optional
+        The name to assign to the created network. Defaults to None.
+
+    Returns
+    -------
+    App::DocumentObjectGroup
+        The created MEP network group object.
+    """
+    if not FreeCAD.ActiveDocument:
+        FreeCAD.Console.PrintError("No active document. Aborting\n")
+        return None
+
+    network = FreeCAD.ActiveDocument.addObject("App::DocumentObjectGroup", "MEPNetwork")
+    network.Label = name if name else translate("Arch", "MEP Network")
+
+    # Add objects to network group
+    objects = []
+    if pipes:
+        objects.extend(pipes)
+    if fixtures:
+        objects.extend(fixtures)
+    if valves:
+        objects.extend(valves)
+    
+    if objects:
+        network.Group = objects
+
+    return network
