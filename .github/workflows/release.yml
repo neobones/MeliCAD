@@ -32,7 +32,7 @@ jobs:
           7z x LibPack.7z -oLibPack
       - name: Configure CMake
         run: |
-          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DFREECAD_LIBPACK_DIR=${{ github.workspace }}/LibPack
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DFREECAD_LIBPACK_DIR=${{ github.workspace }}/LibPack -DFREECAD_QT_VERSION=6
       - name: Build
         run: cmake --build build --config Release
       - name: Verificar binario
