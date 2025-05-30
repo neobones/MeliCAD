@@ -22,11 +22,12 @@ jobs:
         run: choco install 7zip
       - name: Install jq
         run: choco install jq
-      - name: Download Latest LibPack
+      - name: Download Latest LibPack (VS2022)
         shell: pwsh
         run: |
           $release = Invoke-RestMethod -Uri "https://api.github.com/repos/FreeCAD/FreeCAD-LibPack/releases/latest"
-          $asset = $release.assets | Where-Object { $_.name -like "*.7z" } | Select-Object -First 1
+          $asset = $release.assets | Where-Object { $_.name -like "*VC17*.7z" } | Select-Object -First 1
+          if (-not $asset) { throw "No se encontró un LibPack para VC17 (VS2022) en el último release." }
           Invoke-WebRequest -Uri $asset.browser_download_url -OutFile "LibPack.7z"
           7z x LibPack.7z -oLibPack
       - name: Configure CMake
