@@ -10,12 +10,29 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Compilar en Windows
-        run: echo "Compilando en Windows..." > win.txt
-      - name: Subir Release (Windows)
+        with:
+          submodules: true
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install CMake
+        uses: lukka/get-cmake@v3
+      - name: Install 7zip
+        run: choco install 7zip
+      - name: Download LibPack
+        run: |
+          curl -L -o LibPack.7z https://github.com/FreeCAD/FreeCAD/releases/download/0.20/FreeCADLibs_12.5.4_x64_VC17.7z
+          7z x LibPack.7z -oLibPack
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DFREECAD_LIBPACK_DIR=${{ github.workspace }}/LibPack
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Upload Release Asset (Windows)
         uses: softprops/action-gh-release@v1
         with:
-          files: win.txt
+          files: build/bin/FreeCAD.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -23,12 +40,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Compilar en Linux
-        run: echo "Compilando en Linux..." > linux.txt
-      - name: Subir Release (Linux)
+        with:
+          submodules: true
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libtool libxerces-c-dev libboost-all-dev libcoin80-dev libeigen3-dev libqt5svg5-dev qttools5-dev qttools5-dev-tools python3-pyside2.qtcore python3-pyside2.qtgui python3-pyside2.qtsvg python3-pyside2.qtwidgets python3-pyside2uic
+      - name: Configure CMake
+        run: cmake -S . -B build -DBUILD_QT5=ON -DBUILD_GUI=ON
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package AppImage (opcional)
+        run: |
+          # Aquí deberías agregar el empaquetado real, por ejemplo usando linuxdeploy o similar
+          # Este es solo un ejemplo de placeholder
+          cp build/bin/FreeCAD build/bin/FreeCAD-linux
+      - name: Upload Release Asset (Linux)
         uses: softprops/action-gh-release@v1
         with:
-          files: linux.txt
+          files: build/bin/FreeCAD-linux
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -36,11 +66,23 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Compilar en macOS
-        run: echo "Compilando en macOS..." > macos.txt
-      - name: Subir Release (macOS)
+        with:
+          submodules: true
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install cmake boost eigen qt5 xerces-c
+      - name: Configure CMake
+        run: cmake -S . -B build -DBUILD_QT5=ON -DBUILD_GUI=ON
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package DMG (opcional)
+        run: |
+          # Aquí deberías agregar el empaquetado real, por ejemplo usando create-dmg o similar
+          cp build/bin/FreeCAD build/bin/FreeCAD-macos
+      - name: Upload Release Asset (macOS)
         uses: softprops/action-gh-release@v1
         with:
-          files: macos.txt
+          files: build/bin/FreeCAD-macos
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
