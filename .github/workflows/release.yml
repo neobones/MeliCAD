@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.10'
       - name: Install CMake
-        uses: lukka/get-cmake@v3
+        uses: jwlawson/actions-setup-cmake@v1
       - name: Install 7zip
         run: choco install 7zip
       - name: Download LibPack
@@ -29,6 +29,9 @@ jobs:
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DFREECAD_LIBPACK_DIR=${{ github.workspace }}/LibPack
       - name: Build
         run: cmake --build build --config Release
+      - name: Verificar binario
+        run: |
+          if (!(Test-Path "build/bin/FreeCAD.exe")) { throw "No se encontró el ejecutable FreeCAD.exe" }
       - name: Upload Release Asset (Windows)
         uses: softprops/action-gh-release@v1
         with:
@@ -50,10 +53,12 @@ jobs:
         run: cmake -S . -B build -DBUILD_QT5=ON -DBUILD_GUI=ON
       - name: Build
         run: cmake --build build --config Release
+      - name: Verificar binario
+        run: |
+          test -f build/bin/FreeCAD || (echo "No se encontró el ejecutable FreeCAD" && exit 1)
       - name: Package AppImage (opcional)
         run: |
           # Aquí deberías agregar el empaquetado real, por ejemplo usando linuxdeploy o similar
-          # Este es solo un ejemplo de placeholder
           cp build/bin/FreeCAD build/bin/FreeCAD-linux
       - name: Upload Release Asset (Linux)
         uses: softprops/action-gh-release@v1
@@ -76,6 +81,9 @@ jobs:
         run: cmake -S . -B build -DBUILD_QT5=ON -DBUILD_GUI=ON
       - name: Build
         run: cmake --build build --config Release
+      - name: Verificar binario
+        run: |
+          test -f build/bin/FreeCAD || (echo "No se encontró el ejecutable FreeCAD" && exit 1)
       - name: Package DMG (opcional)
         run: |
           # Aquí deberías agregar el empaquetado real, por ejemplo usando create-dmg o similar
