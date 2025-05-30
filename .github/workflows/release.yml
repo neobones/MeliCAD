@@ -20,9 +20,14 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v1
       - name: Install 7zip
         run: choco install 7zip
-      - name: Download LibPack
+      - name: Install jq
+        run: choco install jq
+      - name: Download Latest LibPack
+        shell: pwsh
         run: |
-          curl -L -o LibPack.7z https://github.com/FreeCAD/FreeCAD/releases/download/0.20/FreeCADLibs_12.5.4_x64_VC17.7z
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/FreeCAD/FreeCAD-LibPack/releases/latest"
+          $asset = $release.assets | Where-Object { $_.name -like "*.7z" } | Select-Object -First 1
+          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile "LibPack.7z"
           7z x LibPack.7z -oLibPack
       - name: Configure CMake
         run: |
