@@ -1,0 +1,46 @@
+name: Build and Release FreeCAD MEP
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compilar en Windows
+        run: echo "Compilando en Windows..." > win.txt
+      - name: Subir Release (Windows)
+        uses: softprops/action-gh-release@v1
+        with:
+          files: win.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compilar en Linux
+        run: echo "Compilando en Linux..." > linux.txt
+      - name: Subir Release (Linux)
+        uses: softprops/action-gh-release@v1
+        with:
+          files: linux.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compilar en macOS
+        run: echo "Compilando en macOS..." > macos.txt
+      - name: Subir Release (macOS)
+        uses: softprops/action-gh-release@v1
+        with:
+          files: macos.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
